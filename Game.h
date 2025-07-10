@@ -17,7 +17,8 @@ struct Particle {
 enum class GameState {
     SHOP,
     SCRATCHING,
-    RESULT
+    RESULT,
+    GAME_OVER
 };
 
 class Game {
@@ -36,6 +37,13 @@ private:
 
     void toggleFullscreen();
 
+    void drawOwnedCards(sf::RenderTarget& target);
+
+    void startNewRound();
+    void checkRoundEnd();
+
+    void triggerGameOver();
+
     sf::RenderWindow window;
     sf::RenderTexture virtualCanvas;
     sf::Sprite finalSprite;
@@ -48,6 +56,8 @@ private:
 
     Player player;
     Shop shop;
+    std::unique_ptr<ShopView> shopView;
+
     GameState currentState = GameState::SHOP;
 
     sf::Text balanceText;  // Font is now from ResourceManager, no sf::Font member needed
@@ -59,9 +69,26 @@ private:
 
     sf::Clock deltaClock;
 
-    std::unique_ptr<ScratchCard> scratchCard;
-    std::unique_ptr<ShopView> shopView;
+    std::vector<std::unique_ptr<ScratchCard>> scratchCards;
+    std::vector<std::string> ownedCardsToScratch;
+    size_t currentCardIndex = 0;
+
+
+    bool cardProcessed = false;
+
+    // ROUNDS
+    int currentRound = 1;
+    int quota = 50;
+    int roundEarnings = 0;
+    bool gameOver = false;
+
+    sf::Text quotaText;
+    sf::Text roundEarningsText;
+
 
     bool shopActive = false;
+
+
+
 
 };

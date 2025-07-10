@@ -17,13 +17,14 @@ public:
     ScratchCard(const std::string& cardPath, const std::string& overlayPath, float scale);
 
     bool scratchAt(float x, float y, Player& player);
-    void draw(sf::RenderTarget& target) const;
+
+    // Split draw into two methods
+    void drawBase(sf::RenderTarget& target) const;
+    void drawOverlay(sf::RenderTarget& target) const;
 
     void setPosition(float x, float y);
     float getWidth() const;
     float getHeight() const;
-
-
 
     std::vector<PrizeTextInfo> getRevealedPrizeTexts() const;
 
@@ -40,13 +41,33 @@ public:
     float getAccumulatedMultiplier() const { return accumulatedMultiplier; }
     void applyWinningsToPlayer(Player& player);
 
+    void drawPrizes(sf::RenderTarget& target) const;  // Declare drawPrizes
     std::string getPrizeText(const Prize& prize) const;
 
     bool areWinningsApplied() const { return winningsApplied; }
 
+    void loadCard(const std::string& cardId);
+    void resetScratch();
+
+    // Auto scratch control
+    bool autoScratchActive = false;
+    size_t autoScratchZoneIndex = 0;
+    float autoScratchTimer = 0.f;
+    float autoScratchInterval = 0.5f;  // initial delay between zones (seconds)
+    float autoScratchAcceleration = 0.9f;  // multiplier to ramp speed up (reduce interval)
+    float autoScratchMinInterval = 0.05f;  // minimum interval between zones
+
+
+    void startAutoScratch();
+
+    void updateAutoScratch(float dt, Player& player);
+
+
 private:
     sf::Texture cardTexture;
     sf::Sprite cardSprite;
+
+    sf::Sprite baseSprite;
 
     sf::Image overlayImage;
     sf::Texture overlayTexture;
@@ -66,6 +87,8 @@ private:
         bool revealed = false;
         bool applied = false;
         Prize prize;
+
+        sf::Sprite symbol;
     };
 
     std::vector<Zone> zones;
@@ -78,4 +101,17 @@ private:
     int accumulatedMoney = 0;
     float accumulatedMultiplier = 1.f;
     bool winningsApplied = false;
+
+
+
+    // symbols
+    sf::Sprite emptySprite;
+    sf::Sprite lucky7Sprite;
+
+    // symbols count
+	int emptyCount = 0;
+	int lucky7Count = 0;
+
+
+
 };
