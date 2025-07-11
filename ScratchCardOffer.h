@@ -3,6 +3,7 @@
 #include <string>
 #include <SFML/Graphics.hpp>
 #include "CardTypes.h"
+#include "SymbolType.h"
 
 enum class Rarity { Common, Uncommon, Rare, Epic, Legendary };
 
@@ -12,4 +13,5 @@ struct ScratchCardOffer {
 	std::vector<CardType> cardTypes;
 	int cost;
 	sf::Sprite previewSprite;
+	std::vector<SymbolType> allowedSymbols;
 };

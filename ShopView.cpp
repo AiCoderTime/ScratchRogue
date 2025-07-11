@@ -2,42 +2,41 @@
 #include "Player.h"
 #include <random>
 
+// Constants
 constexpr float GAME_PIXEL_SCALE = 3.f;
+constexpr float SCREEN_WIDTH = 1280.f;
+constexpr float SCREEN_HEIGHT = 720.f;
 
 ShopView::ShopView() : font(ResourceManager::getFont("mainFont")) {
+    // Setup background
     background.setTexture(ResourceManager::getTexture("shop_bg"));
-    // Center background sprite (128x128 scaled by 3)
-    sf::Vector2u textureSize = background.getTexture()->getSize(); // 128x128
-    const float screenWidth = 1280.f;
-    const float screenHeight = 720.f;
-    background.setPosition(
-        (screenWidth - textureSize.x * GAME_PIXEL_SCALE) / 2.f,
-        (screenHeight - textureSize.y * GAME_PIXEL_SCALE) / 2.f
-    );
+    sf::Vector2u texSize = background.getTexture()->getSize(); // e.g. 128x128
     background.setScale(GAME_PIXEL_SCALE, GAME_PIXEL_SCALE);
+    background.setPosition(
+        (SCREEN_WIDTH - texSize.x * GAME_PIXEL_SCALE) / 2.f,
+        (SCREEN_HEIGHT - texSize.y * GAME_PIXEL_SCALE) / 2.f
+    );
 
     sf::Vector2f bgPos = background.getPosition();
     sf::Vector2f bgScale = background.getScale();
 
-    // Positions relative to background (adjust as needed)
+    // Relative centers for card icons inside the background
     const sf::Vector2f cardLocalCenters[3] = {
-        {27.f, 31.f},   // left card center
-        {75.f, 31.f},   // center card center
-        {123.f, 31.f}   // right card center
+        {27.f, 31.f}, {75.f, 31.f}, {123.f, 31.f}
     };
 
+    // Relative centers for relic icons inside the background
     const sf::Vector2f relicLocalCenters[2] = {
-        {60.f, 90.f},   // left relic center
-        {90.f, 90.f}    // right relic center
+        {60.f, 90.f}, {90.f, 90.f}
     };
 
+    // Calculate absolute positions for cards and relics
     for (int i = 0; i < 3; ++i) {
         cardPositions[i] = sf::Vector2f(
             bgPos.x + cardLocalCenters[i].x * bgScale.x,
             bgPos.y + cardLocalCenters[i].y * bgScale.y
         );
     }
-
     for (int i = 0; i < 2; ++i) {
         relicPositions[i] = sf::Vector2f(
             bgPos.x + relicLocalCenters[i].x * bgScale.x,
@@ -45,53 +44,49 @@ ShopView::ShopView() : font(ResourceManager::getFont("mainFont")) {
         );
     }
 
-    rerollButtonPos = sf::Vector2f(
-        bgPos.x + 96.f * bgScale.x,
-        bgPos.y + 110.f * bgScale.y
-    );
-
+    // Setup reroll button near bottom center
     rerollButton.setTexture(ResourceManager::getTexture("reroll_button"));
     rerollButton.setScale(GAME_PIXEL_SCALE, GAME_PIXEL_SCALE);
 
-    // Center reroll button at bottom with padding
     float buttonWidth = rerollButton.getTexture()->getSize().x * GAME_PIXEL_SCALE;
     float buttonHeight = rerollButton.getTexture()->getSize().y * GAME_PIXEL_SCALE;
+
     rerollButtonPos = sf::Vector2f(
-        (screenWidth - buttonWidth) / 2.f,
-        screenHeight - buttonHeight - 200.f
+        (SCREEN_WIDTH - buttonWidth) / 2.f,
+        SCREEN_HEIGHT - buttonHeight - 200.f
     );
     rerollButton.setPosition(rerollButtonPos);
 
+    // Setup next round button below reroll button
     nextRoundButton.setTexture(ResourceManager::getTexture("next_round_button"));
     nextRoundButton.setScale(GAME_PIXEL_SCALE, GAME_PIXEL_SCALE);
 
     nextRoundButtonPos = sf::Vector2f(
         rerollButtonPos.x,
-        rerollButtonPos.y + rerollButton.getTexture()->getSize().y * GAME_PIXEL_SCALE + 10.f
+        rerollButtonPos.y + buttonHeight + 10.f
     );
     nextRoundButton.setPosition(nextRoundButtonPos);
 
+    // Setup price text style
     priceText.setFont(font);
     priceText.setCharacterSize(static_cast<unsigned int>(12 * GAME_PIXEL_SCALE));
     priceText.setFillColor(sf::Color::White);
 
-    reroll();
+    reroll(); // Initialize shop items
 }
 
 void ShopView::reroll() {
     items.clear();
-    // Generate 3 cards - all "lucky_7_shop" icons in shop
+
+    // Always generate 3 cards - currently all with preview "lucky_7_shop"
     for (int i = 0; i < 3; ++i) {
         ShopItem item;
         item.type = ShopItem::Type::Card;
-
-        // Card ID is shop preview version
-        item.id = "lucky_7_shop"; // shop preview ID
-
+        item.id = "lucky_7_shop";  // Shop preview texture ID
         item.rarity = "Common";
         item.price = getPriceForRarity(item.rarity);
 
-        // Use shop preview texture (small icon)
+        // Setup sprite icon for the shop preview
         item.icon.setTexture(ResourceManager::getTexture(item.id));
         sf::Vector2u texSize = item.icon.getTexture()->getSize();
         item.icon.setOrigin(texSize.x / 2.f, texSize.y / 2.f);
@@ -100,18 +95,18 @@ void ShopView::reroll() {
 
         items.push_back(item);
     }
-    cardsBought = 0; // reset on reroll
+
+    cardsBought = 0; // Reset purchase count on reroll
 
     // Generate 2 relics randomly
     for (int i = 0; i < 2; ++i) {
         ShopItem item;
         item.type = ShopItem::Type::Relic;
-        item.id = "relic_" + std::to_string(rand() % 5);
-        item.price = 20 + rand() % 10;
+        item.id = "relic_" + std::to_string(rand() % 5); // random relic id from relic_0 to relic_4
+        item.price = 20 + rand() % 10;                   // price between 20 and 29
 
-        // Relic icon texture always uses relic_1, relic_2, etc.
+        // Use fixed relic texture slots (relic_1, relic_2)
         item.icon.setTexture(ResourceManager::getTexture("relic_" + std::to_string(i + 1)));
-
         sf::Vector2u texSize = item.icon.getTexture()->getSize();
         item.icon.setOrigin(texSize.x / 2.f, texSize.y / 2.f);
         item.icon.setPosition(relicPositions[i]);
@@ -123,36 +118,32 @@ void ShopView::reroll() {
 
 void ShopView::draw(sf::RenderTarget& target) {
     target.draw(background);
+
     for (const auto& item : items) {
         target.draw(item.icon);
+
+        // Set price text string and center it horizontally under the icon
         priceText.setString("£" + std::to_string(item.price));
         sf::FloatRect bounds = priceText.getLocalBounds();
         priceText.setOrigin(bounds.width / 2.f, 0.f);
 
-        float yOffset;
-        if (item.type == ShopItem::Type::Card) {
-            yOffset = 25.f * GAME_PIXEL_SCALE;   // card price offset (lower)
-        }
-        else if (item.type == ShopItem::Type::Relic) {
-            yOffset = 10.f * GAME_PIXEL_SCALE;    // relic price offset (higher)
-        }
-        else {
-            yOffset = 25.f * GAME_PIXEL_SCALE;   // default fallback
-        }
-
+        float yOffset = (item.type == ShopItem::Type::Relic) ? 10.f * GAME_PIXEL_SCALE : 25.f * GAME_PIXEL_SCALE;
         priceText.setPosition(item.icon.getPosition().x, item.icon.getPosition().y + yOffset);
         target.draw(priceText);
     }
+
     target.draw(rerollButton);
     target.draw(nextRoundButton);
 }
 
 void ShopView::handleClick(float x, float y, Player& player) {
+    // Check reroll button first
     if (rerollButton.getGlobalBounds().contains(x, y)) {
         reroll();
         return;
     }
 
+    // Check clicks on items (cards or relics)
     for (auto it = items.begin(); it != items.end(); /* no increment here */) {
         if (it->icon.getGlobalBounds().contains(x, y)) {
             if (it->type == ShopItem::Type::Card) {
@@ -163,10 +154,8 @@ void ShopView::handleClick(float x, float y, Player& player) {
                 if (player.getBalance() >= it->price) {
                     player.addBalance(-it->price);
                     cardsBought++;
-                    // Pass the shop preview ID (ScratchCard will remap internally)
-                    player.addCard(it->id);
+                    player.addCard(it->id); // Add card by its shop preview ID
                     std::cout << "Bought card: " << it->id << " for £" << it->price << "\n";
-
                     it = items.erase(it);
                     return;
                 }
@@ -180,7 +169,6 @@ void ShopView::handleClick(float x, float y, Player& player) {
                     player.addBalance(-it->price);
                     player.addRelic(it->id);
                     std::cout << "Bought relic: " << it->id << " for £" << it->price << "\n";
-
                     it = items.erase(it);
                     return;
                 }
@@ -195,17 +183,17 @@ void ShopView::handleClick(float x, float y, Player& player) {
         }
     }
 
+    // Check next round button click
     if (nextRoundButton.getGlobalBounds().contains(x, y)) {
         if (onNextRoundClicked) {
             onNextRoundClicked();
         }
-        return;
     }
 }
 
 int ShopView::getPriceForRarity(const std::string& rarity) {
     if (rarity == "Common") return 3;
-    else if (rarity == "Uncommon") return 5;
-    else if (rarity == "Rare") return 10;
-    return 3;
+    if (rarity == "Uncommon") return 5;
+    if (rarity == "Rare") return 10;
+    return 3; // Default fallback price
 }

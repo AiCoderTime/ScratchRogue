@@ -1,19 +1,23 @@
 #pragma once
 #include <SFML/Graphics.hpp>
+#include <vector>
+#include <memory>
+#include <string>
 #include "ScratchCard.h"
 #include "Player.h"
 #include "Shop.h"
 #include "ShopView.h"
-#include <vector>
-#include "ResourceManager.h"  // Add this include
+#include "ResourceManager.h"
 
+// Simple particle system for scratch effects
 struct Particle {
     sf::Sprite sprite;
     sf::Vector2f velocity;
     sf::Vector2f acceleration;
-    float lifetime; // seconds
+    float lifetime; // in seconds
 };
 
+// Main game states
 enum class GameState {
     SHOP,
     SCRATCHING,
@@ -26,33 +30,38 @@ public:
     Game();
     void run();
 
-    void loadResources();
-
 private:
+    // Core game loop helpers
     void processEvents();
     void update(float dt);
     void render();
 
+    // Window scale and fullscreen handling
     void updateWindowScale();
-
     void toggleFullscreen();
 
+    // Drawing helpers
     void drawOwnedCards(sf::RenderTarget& target);
 
+    // Round and game state management
     void startNewRound();
     void checkRoundEnd();
-
     void triggerGameOver();
 
+    // Resource loading helper
+    void loadResources();
+
+private:
     sf::RenderWindow window;
-    sf::RenderTexture virtualCanvas;
+    sf::RenderTexture virtualCanvas;  // For scaling and smoothing
     sf::Sprite finalSprite;
 
     static const int VIRTUAL_WIDTH = 1280;
     static const int VIRTUAL_HEIGHT = 720;
 
-    float windowScale;
-    float offsetX, offsetY;
+    float windowScale = 1.f;
+    float offsetX = 0.f;
+    float offsetY = 0.f;
 
     Player player;
     Shop shop;
@@ -60,10 +69,13 @@ private:
 
     GameState currentState = GameState::SHOP;
 
-    sf::Text balanceText;  // Font is now from ResourceManager, no sf::Font member needed
+    // UI texts
+    sf::Text balanceText;
     sf::Text winningsText;
+    sf::Text quotaText;
+    sf::Text roundEarningsText;
 
-    bool isScratching;
+    bool isScratching = false;
 
     std::vector<Particle> particles;
 
@@ -73,22 +85,13 @@ private:
     std::vector<std::string> ownedCardsToScratch;
     size_t currentCardIndex = 0;
 
-
     bool cardProcessed = false;
 
-    // ROUNDS
+    // Round variables
     int currentRound = 1;
     int quota = 50;
     int roundEarnings = 0;
     bool gameOver = false;
 
-    sf::Text quotaText;
-    sf::Text roundEarningsText;
-
-
     bool shopActive = false;
-
-
-
-
 };

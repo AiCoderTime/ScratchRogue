@@ -1,5 +1,6 @@
 #include "ResourceManager.h"
 
+// Static member definitions
 std::unordered_map<std::string, sf::Font> ResourceManager::fonts;
 std::unordered_map<std::string, sf::Texture> ResourceManager::textures;
 
@@ -17,7 +18,7 @@ bool ResourceManager::loadFont(const std::string& name, const std::string& filen
     }
     fonts[name] = std::move(font);
 
-    // Load default font if not loaded
+    // Set default font if none loaded yet
     if (!defaultFontLoaded) {
         defaultFont = fonts[name];
         defaultFontLoaded = true;
@@ -34,7 +35,6 @@ sf::Font& ResourceManager::getFont(const std::string& name) {
     else {
         std::cerr << "[Warning] Font not found: " << name << ". Returning default font." << std::endl;
         if (!defaultFontLoaded) {
-            // Load a system fallback font here or just leave defaultFont empty
             std::cerr << "[Error] Default font not loaded! Returning empty font." << std::endl;
         }
         return defaultFont;
@@ -42,9 +42,6 @@ sf::Font& ResourceManager::getFont(const std::string& name) {
 }
 
 bool ResourceManager::loadTexture(const std::string& name, const std::string& filename) {
-    std::cout << "[Debug] Attempting to load texture: '" << name
-        << "' from file: " << filename << std::endl;
-
     sf::Texture texture;
     if (!texture.loadFromFile(filename)) {
         std::cerr << "[Error] Failed to load texture: " << filename << std::endl;
@@ -52,18 +49,15 @@ bool ResourceManager::loadTexture(const std::string& name, const std::string& fi
     }
 
     textures[name] = std::move(texture);
-    std::cout << "[Success] Loaded texture '" << name << "' from: " << filename << std::endl;
 
-    // Load default texture if not loaded
+    // Set default texture if none loaded yet
     if (!defaultTextureLoaded) {
         defaultTexture = textures[name];
         defaultTextureLoaded = true;
-        std::cout << "[Info] Set default texture to: " << name << std::endl;
     }
 
     return true;
 }
-
 
 sf::Texture& ResourceManager::getTexture(const std::string& name) {
     auto it = textures.find(name);
